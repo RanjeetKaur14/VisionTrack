@@ -1,0 +1,18 @@
+{
+    "store_id": "STORE_002",
+    "camera_id": "CAM_01",
+
+    "recognition": {
+        "existing_threshold": 0.30,
+        "new_threshold": 0.25
+    },
+
+    "presence": {
+        "timeout_seconds": 30,
+        "presence_event_seconds": 30
+    },
+
+    "detection_deduplication": {
+        "timeout_minutes": 30
+    }
+}

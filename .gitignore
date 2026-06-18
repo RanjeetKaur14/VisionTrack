@@ -1,0 +1,22 @@
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Virtual environments
+venv/
+.venv/
+
+# Generated images
+saved_faces/
+invalid_faces/
+temp_search/
+
+# Logs
+logs/
+*.log
+
+# Environment variables
+.env
+
+# VSCode
+.vscode/

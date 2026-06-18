@@ -1,0 +1,9 @@
+# test_kafka.py
+
+from kafka import KafkaProducer
+
+producer = KafkaProducer(
+    bootstrap_servers='localhost:9092'
+)
+
+print("CONNECTED")
