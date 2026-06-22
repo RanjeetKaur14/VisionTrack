@@ -241,7 +241,7 @@ class MilvusService:
 
         result = collection.insert([data])
 
-        # collection.flush()
+        collection.flush()
 
         return result.primary_keys[0]
 

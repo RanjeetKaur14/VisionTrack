@@ -93,6 +93,7 @@ services:
       - ./saved_faces:/app/saved_faces
       - ./invalid_faces:/app/invalid_faces
       - ./temp_search:/app/temp_search
+      - insightface_models:/root/.insightface
 
   consumer:
     image: facerecognition:latest
@@ -122,6 +123,7 @@ services:
       MILVUS_PORT: 19530
     volumes:
       - ./saved_faces:/app/saved_faces
+      - insightface_models:/root/.insightface
     command: python -u -m services.detection_history_consumer
       
   frontend:
@@ -138,3 +140,4 @@ services:
 volumes:
   minio_data:
   milvus_data:
+  insightface_models:

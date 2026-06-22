@@ -45,7 +45,7 @@ def start_consumer():
 
             event = json.loads(message.value)
 
-        except Exception as e:docker logs -f consumer
+        except Exception as e:
 
             print("BAD MESSAGE:")
             print(message.value)

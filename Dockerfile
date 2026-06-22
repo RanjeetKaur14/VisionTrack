@@ -20,6 +20,10 @@ RUN pip install --no-cache-dir \
 
 # Install the rest
 RUN pip install --no-cache-dir -r requirements.txt
+RUN python -c "\
+from insightface.app import FaceAnalysis; \
+app = FaceAnalysis(name='buffalo_l'); \
+app.prepare(ctx_id=0, det_size=(128,128))"
 
 COPY . .
 
