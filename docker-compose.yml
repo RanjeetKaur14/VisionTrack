@@ -96,6 +96,7 @@ services:
       - insightface_models:/root/.insightface
 
   consumer:
+    build: .
     image: facerecognition:latest
     container_name: consumer
     restart: unless-stopped
@@ -111,6 +112,7 @@ services:
       - ./saved_faces:/app/saved_faces
 
   history_consumer:
+    build: .
     image: facerecognition:latest
     container_name: history_consumer
     restart: unless-stopped
