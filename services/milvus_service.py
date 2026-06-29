@@ -231,17 +231,18 @@ class MilvusService:
 
     def insert_person(self, embedding):
 
-        collection = Collection(
-            self.person_collection_name
-        )
+        collection = Collection(self.person_collection_name)
 
         data = [
-            embedding.tolist()
+            [embedding.tolist()]
         ]
 
-        result = collection.insert([data])
+        result = collection.insert(data)
 
         collection.flush()
+
+        print("Primary Keys:", result.primary_keys)
+        print("Entities:", collection.num_entities)
 
         return result.primary_keys[0]
 

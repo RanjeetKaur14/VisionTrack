@@ -8,6 +8,7 @@ import asyncio
 import json
 import os
 import shutil
+import uuid
 from concurrent.futures import ThreadPoolExecutor
 
 
@@ -15,7 +16,9 @@ app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "http://localhost:5173"
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "http://192.168.5.231:5173",
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -56,9 +59,44 @@ def _coerce_event(event: dict) -> dict:
 
 def _build_image_url(image_path: str, base: str) -> str:
     filename = image_path.split("/")[-1]
-    return f"http://127.0.0.1:8000/{base}/{filename}"
+    return f"http://192.168.5.231:8000/{base}/{filename}"
 
+def _save_uploaded_images(images):
 
+    image_paths = []
+
+    for image in images:
+
+        # Preserve original extension
+        extension = os.path.splitext(
+            image.filename
+        )[1]
+
+        # Generate unique filename
+        filename = (
+            f"{uuid.uuid4()}{extension}"
+        )
+
+        image_path = os.path.join(
+            "temp_search",
+            filename
+        )
+
+        with open(
+            image_path,
+            "wb"
+        ) as buffer:
+
+            shutil.copyfileobj(
+                image.file,
+                buffer
+            )
+
+        image_paths.append(
+            image_path
+        )
+
+    return image_paths
 # ─────────────────────────────────────────
 # Routes
 # ─────────────────────────────────────────
@@ -71,10 +109,9 @@ async def search_person(
     Save the uploaded image to disk, then run face search in a
     background thread so the async event loop is never blocked.
     """
-    image_path = os.path.join("temp_search", image.filename)
-
-    with open(image_path, "wb") as buffer:
-        shutil.copyfileobj(image.file, buffer)
+    image_path = _save_uploaded_images(
+        [image]
+    )[0]
 
     # Offload the CPU-bound search to the thread pool
     import asyncio
@@ -93,6 +130,76 @@ async def search_person(
 
     return result
 
+
+@app.post("/search/multiple")
+async def search_multiple_people(
+
+    images: list[UploadFile] = File(...)
+
+):
+
+    image_paths = _save_uploaded_images(
+        images
+    )
+    # ---------------------------------------
+    # Run search in thread pool
+    # ---------------------------------------
+
+    loop = asyncio.get_event_loop()
+
+    result = await loop.run_in_executor(
+
+        _executor,
+
+        search_service.search_multiple,
+
+        image_paths
+
+    )
+
+    # ---------------------------------------
+    # Convert large IDs to strings
+    # ---------------------------------------
+
+    if (
+
+        result.get("success")
+
+        and
+
+        "results" in result
+
+    ):
+
+        for cluster in result["results"]:
+
+            if (
+
+                cluster.get("matched")
+
+                and
+
+                "person_id" in cluster
+
+            ):
+
+                cluster["person_id"] = _coerce_id(
+
+                    cluster["person_id"]
+
+                )
+
+                if "events" in cluster:
+
+                    cluster["events"] = [
+
+                        _coerce_event(event)
+
+                        for event in cluster["events"]
+
+                    ]
+
+    return result
 
 @app.get("/stats")
 def get_stats():
@@ -180,7 +287,7 @@ def get_invalid_faces():
 
     def _make_entry(filename: str) -> dict:
         return {
-            "image_url": f"http://127.0.0.1:8000/invalid_faces/{filename}"
+            "image_url": f"http://192.168.5.231:8000/invalid_faces/{filename}"
         }
 
     return list(_executor.map(_make_entry, filenames))
@@ -244,7 +351,7 @@ async def stream_events():
                         )
 
                         latest["image_url"] = (
-                            f"http://127.0.0.1:8000/"
+                            f"http://192.168.5.231:8000/"
                             f"saved_faces/"
                             f"{filename}"
                         )

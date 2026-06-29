@@ -41,8 +41,11 @@ services:
       etcd
       -advertise-client-urls=http://etcd:2379
       -listen-client-urls=http://0.0.0.0:2379
+      -data-dir=/etcd-data
     ports:
       - "2379:2379"
+    volumes:
+      - etcd_data:/etcd-data   
 
   minio:
     image: minio/minio
@@ -142,4 +145,5 @@ services:
 volumes:
   minio_data:
   milvus_data:
+  etcd_data:
   insightface_models:
