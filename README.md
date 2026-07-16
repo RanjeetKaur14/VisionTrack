@@ -1,9 +1,9 @@
 <div align="center">
 
-# FaceRecognition_with_Tracking
+# VisionTrack -FaceRecognition_with_Tracking
 
 <a href="#"><img src="https://img.shields.io/badge/status-completed-success?style=flat-square"></a>
-<a href="#"><img src="https://img.shields.io/badge/license-MIT-64748b?style=flat-square"></a>
+
 <a href="#"><img src="https://img.shields.io/badge/AI-Computer%20Vision-2563eb?style=flat-square"></a>
 <a href="#"><img src="https://img.shields.io/badge/database-Milvus-0f766e?style=flat-square"></a>
 <a href="#"><img src="https://img.shields.io/badge/messaging-Kafka-f97316?style=flat-square"></a>
@@ -28,7 +28,6 @@
 - Project Structure
 - Getting Started
 - Future Scope
-- License
 
 ---
 
@@ -265,12 +264,6 @@ python main.py
 - Edge deployment
 - Cloud synchronization
 - Analytics dashboard
-
----
-
-# License
-
-Released under the MIT License.
 
 ---
 
