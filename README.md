@@ -1,274 +1,97 @@
 <div align="center">
 
-# VisionTrack -FaceRecognition_with_Tracking
+# VisionTrack
 
-<a href="#"><img src="https://img.shields.io/badge/status-completed-success?style=flat-square"></a>
+### Real-Time Face Analytics Platform
 
-<a href="#"><img src="https://img.shields.io/badge/AI-Computer%20Vision-2563eb?style=flat-square"></a>
-<a href="#"><img src="https://img.shields.io/badge/database-Milvus-0f766e?style=flat-square"></a>
-<a href="#"><img src="https://img.shields.io/badge/messaging-Kafka-f97316?style=flat-square"></a>
-
-**Detect. Recognize. Track. Search.**
-
-*A scalable real-time face recognition pipeline built using deep learning, vector search, and event-driven architecture.*
+A modular face recognition system built around vector similarity search, event-driven processing, and real-time identity analytics.
 
 </div>
 
 ---
 
-# Table of Contents
+## Table of Contents
 
-- What it is
+- Overview
 - Problem Statement
 - Solution
-- Features
-- Tech Stack
-- Pipeline
-- Architecture
+- Core Capabilities
+- Technology Stack
+- System Architecture
+- Recognition Pipeline
 - Project Structure
 - Getting Started
-- Future Scope
+- Future Work
 
 ---
 
-# What it is
+# Overview
 
-FaceRecognition_with_Tracking is a real-time face recognition and tracking system designed for intelligent surveillance applications.
+VisionTrack is a real-time face analytics platform designed for continuous identity recognition from live camera streams.
 
-The system detects faces from live camera feeds, generates deep facial embeddings, identifies individuals using vector similarity search, and streams recognition events through an event-driven pipeline for real-time analytics and search.
+The system combines face detection, deep facial embeddings, vector similarity search, event streaming, and searchable recognition history into a single modular pipeline. Unlike traditional face recognition applications that operate on isolated images, VisionTrack models recognition as a continuous stream of events, allowing identities to be searched, tracked, and analyzed over time.
 
-Instead of treating recognition as a standalone task, the project builds a complete recognition ecosystem combining computer vision, vector databases, distributed messaging, and REST APIs into one scalable pipeline.
+Built around a service-oriented architecture, the platform integrates YOLOv8 Face for detection, InsightFace ArcFace for facial embeddings, Milvus for vector similarity search, Apache Kafka for asynchronous event streaming, FastAPI for backend services, and React for visualization. Each subsystem is designed to operate independently, making the platform scalable, maintainable, and easy to extend.
 
 ---
 
 # Problem Statement
 
-Traditional surveillance systems primarily record video without understanding who appears across different cameras or when they were last seen.
+Conventional surveillance systems are largely passive. Although they continuously record video, they provide limited insight into who appears, when they appeared, or where they were previously observed.
 
-Many face recognition projects stop after predicting an identity for a single image.
+Most face recognition projects focus on recognizing a single image and returning a predicted identity. Such approaches are insufficient for real-world deployments where recognition must operate continuously across live camera feeds while maintaining searchable identity history and minimizing duplicate detections.
 
-Real-world deployments require significantly more:
+A practical face recognition platform should be capable of:
 
-- Continuous recognition
-- Low-latency search
-- Persistent identity storage
-- Multi-camera support
-- Scalable event processing
-- Searchable recognition history
+- Continuously processing live video streams.
+- Persistently managing recognized identities.
+- Reducing redundant recognition caused by consecutive frames.
+- Maintaining searchable detection history.
+- Supporting multiple cameras and deployment locations.
+- Performing low-latency similarity search.
+- Decoupling recognition from storage and downstream processing.
 
-This project addresses these challenges through an event-driven architecture centered around vector similarity search.
+VisionTrack addresses these challenges through a modular, event-driven architecture centered around vector similarity search.
 
 ---
 
 # Solution
 
-The pipeline performs the following operations in real time:
+VisionTrack transforms a live camera feed into a searchable stream of recognition events.
 
-- Detect faces from live video
-- Extract facial embeddings using ArcFace
-- Search identities inside Milvus Vector Database
-- Create new identities when no match exists
-- Publish recognition events using Kafka
-- Persist recognition history
-- Expose search APIs through FastAPI
-- Display results through a web dashboard
+Each detected face is first validated to reject low-quality samples before generating a deep facial embedding using ArcFace. The embedding is then compared against previously enrolled identities stored within Milvus using cosine similarity. Based on configurable recognition thresholds, the system either associates the face with an existing identity or creates a new person record.
 
-The architecture separates detection, recognition, storage, and event streaming into independent services, making the system modular and scalable.
+Recognition events are published asynchronously through Apache Kafka, allowing downstream services to process and persist event history independently of the recognition pipeline. A lightweight in-memory presence cache further reduces unnecessary database lookups by identifying recently observed individuals and suppressing duplicate recognition events across consecutive frames.
+
+The platform exposes search and analytics services through FastAPI, enabling users to retrieve recognition history, search for individuals using one or more images, and monitor recognition events through a web dashboard.
 
 ---
 
-# Features
+# Core Capabilities
 
-- Real-time face detection
-- ArcFace embedding generation
-- Vector similarity search using Milvus
-- Identity management
-- Event-driven architecture using Kafka
-- Recognition history
-- FastAPI search service
-- Multi-camera ready architecture
-- Embedding normalization
-- Configurable recognition thresholds
-- Modular service-based design
+- **Real-Time Face Detection**  
+  Detects faces from live camera feeds using a YOLOv8 Face detector optimized for fast inference and accurate localization.
 
----
+- **Deep Face Recognition**  
+  Generates normalized 512-dimensional facial embeddings using InsightFace ArcFace for robust identity matching across varying poses and lighting conditions.
 
-# Tech Stack
+- **Vector Similarity Search**  
+  Stores facial embeddings in Milvus and performs approximate nearest-neighbor search using cosine similarity for low-latency recognition.
 
-| Component | Technology |
-|------------|------------|
-| Language | Python |
-| Face Detection | YOLOv8 Face |
-| Face Recognition | InsightFace (ArcFace) |
-| Vector Database | Milvus |
-| Event Streaming | Apache Kafka |
-| API | FastAPI |
-| Image Processing | OpenCV |
-| Deep Learning | ONNX Runtime |
-| Serialization | JSON |
-| Dashboard | React |
+- **Event-Driven Architecture**  
+  Streams recognition events through Apache Kafka, allowing recognition, storage, and search services to remain loosely coupled.
 
----
+- **Presence Management**  
+  Maintains an in-memory presence cache to prevent redundant recognition events and reduce unnecessary database operations.
 
-# Pipeline
+- **Recognition History**  
+  Persists every confirmed recognition event with associated metadata, including timestamp, camera identifier, image reference, and person identifier.
 
-```
-Camera Feed
-      │
-      ▼
-YOLO Face Detection
-      │
-      ▼
-Face Cropping
-      │
-      ▼
-ArcFace Embedding Generation
-      │
-      ▼
-Embedding Normalization
-      │
-      ▼
-Milvus Vector Search
-      │
-      ▼
-Known Person?
- ┌──────────────┐
- │              │
-Yes            No
- │              │
- ▼              ▼
-Existing ID   Create Person
- │              │
- └──────┬───────┘
-        ▼
-Recognition Event
-        ▼
-Kafka Producer
-        ▼
-Kafka Consumer
-        ▼
-Event Storage
-        ▼
-FastAPI Search API
-        ▼
-React Dashboard
-```
+- **Image-Based Search**  
+  Supports both single-image and multi-image search. Uploaded images are clustered before querying the vector database, improving search robustness when multiple images belong to the same individual.
 
----
+- **REST API**  
+  Exposes endpoints for identity search, event history, statistics, and live event streaming through FastAPI.
 
-# Architecture
-
-The project follows a modular service-oriented architecture.
-
-```
-Camera
-   │
-   ▼
-Camera Service
-   │
-   ▼
-Face Detection
-   │
-   ▼
-Face Recognition Service
-   │
-   ▼
-Milvus Service
-   │
-   ▼
-Detection Event Producer
-   │
-   ▼
-Kafka
-   │
-   ▼
-Detection History Consumer
-   │
-   ▼
-Search API
-   │
-   ▼
-Dashboard
-```
-
-Each component has a single responsibility, allowing individual modules to be replaced or extended without affecting the overall pipeline.
-
----
-
-# Project Structure
-
-```
-FaceRecognition_with_Tracking/
-
-├── camera_service.py
-├── camera_thread_service.py
-├── face_recognition_service.py
-├── FaceProcessor.py
-├── recognition_worker.py
-├── kafka_producer_service.py
-├── detection_event_producer.py
-├── detection_history_consumer.py
-├── milvus_service.py
-├── config_service.py
-├── main.py
-└── README.md
-```
-
----
-
-# Getting Started
-
-Clone the repository
-
-```bash
-git clone https://github.com/<username>/FaceRecognition_with_Tracking.git
-
-cd FaceRecognition_with_Tracking
-```
-
-Install dependencies
-
-```bash
-pip install -r requirements.txt
-```
-
-Start Kafka
-
-```bash
-docker compose up
-```
-
-Start Milvus
-
-```bash
-docker compose up
-```
-
-Run the application
-
-```bash
-python main.py
-```
-
----
-
-# Future Scope
-
-- Distributed multi-camera deployment
-- Face enrollment dashboard
-- Temporal face tracking
-- GPU inference optimization
-- Face quality assessment
-- Real-time alert system
-- Person re-identification
-- Edge deployment
-- Cloud synchronization
-- Analytics dashboard
-
----
-
-<div align="center">
-
-### Built with Computer Vision, Deep Learning and Distributed Systems.
-
-</div>
+- **Modular Design**  
+  Separates detection, recognition, storage, messaging, and search into independent services, simplifying maintenance and future extensions.
