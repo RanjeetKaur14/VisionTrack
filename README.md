@@ -95,3 +95,193 @@ The platform exposes search and analytics services through FastAPI, enabling use
 
 - **Modular Design**  
   Separates detection, recognition, storage, messaging, and search into independent services, simplifying maintenance and future extensions.
+
+  # Technology Stack
+
+| Layer | Technology |
+|--------|------------|
+| Language | Python 3.11 |
+| Face Detection | YOLOv8 Face |
+| Face Recognition | InsightFace (ArcFace) |
+| Vector Database | Milvus |
+| Event Streaming | Apache Kafka |
+| Backend API | FastAPI |
+| Dashboard | React |
+| Image Processing | OpenCV |
+| Deep Learning Runtime | ONNX Runtime |
+| Similarity Metric | Cosine Similarity |
+
+# System Architecture
+
+```mermaid
+flowchart LR
+
+%% -------------------------
+%% Capture Layer
+%% -------------------------
+
+subgraph Capture["Capture Layer"]
+A["Camera Stream"]
+B["Frame Capture"]
+end
+
+%% -------------------------
+%% Detection Layer
+%% -------------------------
+
+subgraph Detection["Detection Layer"]
+C["YOLOv8 Face Detector"]
+D["Face Cropping"]
+E["Face Validation"]
+end
+
+%% -------------------------
+%% Recognition Layer
+%% -------------------------
+
+subgraph Recognition["Recognition Layer"]
+F["Recognition Worker"]
+G["ArcFace Embedding Generator"]
+H["Presence Cache"]
+I["Milvus Identity Search"]
+end
+
+%% -------------------------
+%% Decision Layer
+%% -------------------------
+
+subgraph Decision["Identity Resolution"]
+J["Existing Person"]
+K["New Person"]
+end
+
+%% -------------------------
+%% Event Layer
+%% -------------------------
+
+subgraph Events["Event Processing"]
+L["Kafka Producer"]
+M["Kafka Topic"]
+N["Recognition Consumer"]
+O["Detection Event Producer"]
+P["Detection Topic"]
+Q["History Consumer"]
+end
+
+%% -------------------------
+%% Storage Layer
+%% -------------------------
+
+subgraph Storage["Persistence"]
+R["Persons Collection"]
+S["Recognition History"]
+end
+
+%% -------------------------
+%% Service Layer
+%% -------------------------
+
+subgraph Services["Application Services"]
+T["FastAPI Search API"]
+U["REST Endpoints"]
+V["SSE Event Stream"]
+end
+
+%% -------------------------
+%% Presentation Layer
+%% -------------------------
+
+subgraph Dashboard["Dashboard"]
+W["React UI"]
+end
+
+A --> B
+B --> C
+C --> D
+D --> E
+
+E --> F
+
+F --> G
+
+G --> H
+
+H -->|Cache Miss| I
+H -->|Cache Hit| J
+
+I -->|Match| J
+I -->|No Match| K
+
+J --> L
+K --> L
+
+L --> M
+
+M --> N
+
+N -->|Insert Identity| R
+
+N --> O
+
+O --> P
+
+P --> Q
+
+Q --> S
+
+R --> T
+S --> T
+
+T --> U
+T --> V
+
+U --> W
+V --> W
+```
+
+VisionTrack follows an event-driven service architecture where face recognition, identity management, event persistence, and search operate as independent modules.
+
+Rather than coupling recognition directly with storage, recognition events are published through Apache Kafka and processed asynchronously by downstream services. This separation reduces latency in the live recognition pipeline while allowing identity management, historical event storage, and search services to scale independently.
+
+Two logical data stores are maintained within Milvus:
+
+- **Persons Collection** stores a single embedding representing each unique identity.
+
+- **Recognition History** stores every confirmed recognition event together with its associated metadata, enabling historical search and timeline reconstruction.
+
+A lightweight Presence Cache minimizes redundant recognition by suppressing repeated detections of recently observed individuals before database lookup.
+
+flowchart LR
+
+Camera
+--> Detect
+
+Detect
+--> Validate
+
+Validate
+--> Embed
+
+Embed
+--> Search
+
+Search
+--> Existing
+
+Search
+--> New
+
+Existing
+--> Event
+
+New
+--> Event
+
+Event
+--> Store
+
+Store
+--> API
+
+API
+--> Dashboard
